@@ -1,0 +1,275 @@
+{% extends 'staff_template/base_template.html' %}
+
+{% block main_content %}
+    <!-- Main content -->
+    <div class="home-tab">
+      <div class="d-sm-flex align-items-right justify-content-between border-bottom">
+       
+        <div>
+          <div class="btn-wrapper">
+            <a href="#" class="btn btn-otline-dark" onclick="printPage()"><i class="icon-printer"></i> Print</a>
+          </div>
+        </div>
+      </div>
+      <div class="tab-content tab-content-basic">
+        <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview">
+          <div class="row">
+            <div class="col-sm-12">
+              <div class="statistics-details d-flex align-items-center justify-content-between">
+                <div>
+                  <p class="statistics-title">Students Uner Me</p>
+                  <h3 class="rate-percentage">{{ students_count }}</h3>
+                  <p class="text-danger d-flex"><i class="mdi mdi-menu-down"></i><a href="{% url 'staff_take_attendance' %}" style="text-decoration: none; color: gray;"><span>More info</span></a></p>
+                </div>
+                <div>
+                  <p class="statistics-title">Attendance Taken</p>
+                  <h3 class="rate-percentage">{{ attendance_count }}</h3>
+                  <p class="text-success d-flex"><i class="mdi mdi-menu-up"></i><a href="{% url 'staff_take_attendance' %}" style="text-decoration: none; color: gray;"><span>More info</span></a></p>
+                </div>
+                <div>
+                  <p class="statistics-title">Leave Taken</p>
+                  <h3 class="rate-percentage">{{ leave_count }}</h3>
+                  <p class="text-danger d-flex"><i class="mdi mdi-menu-down"></i><a href="{% url 'staff_apply_leave' %}" style="text-decoration: none; color: gray;"><span>More info</span></a></p>
+                </div>
+                <div class="d-none d-md-block">
+                  <p class="statistics-title">Total Courses</p>
+                  <h3 class="rate-percentage">{{ subject_count }}</h3>
+                  <p class="text-success d-flex"><i class="mdi mdi-menu-down"></i><a href="#" style="text-decoration: none; color: gray;"><span>More info</span></a></p>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+          <div class ="row">
+          <div class="col-lg-6 grid-margin grid-margin-lg-0 stretch-card">
+            <div class="card">
+              <div class="card-body" style="background-color: rgba(206, 206, 238, 0.3);">
+                <h4 class="card-title">Attendance vs Leave Chart</h4>
+                <div class="doughnutjs-wrapper d-flex justify-content-center">
+                  <canvas id="pieChart" style="height: 250px !important;"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 grid-margin grid-margin-lg-0 stretch-card">
+            <div class="card">
+              <div class="card-body" style="background-color: rgba(206, 206, 238, 0.3);">
+                <h4 class="card-title">Attend Subjects</h4>
+                <canvas id="barChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-6 grid-margin grid-margin-lg-0 stretch-card">
+            <div class="card">
+              <div class="card-body" style="background-color: rgba(206, 206, 238, 0.3);">
+                <h4 class="card-title">Students Attendance Data</h4>
+                <canvas id="barChart2" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        </div>
+      </div>
+    </div>
+    {% endblock main_content %}
+{% block custom_js %}
+<script>
+    $(document).ready(function(){
+           var pieData  = {
+              labels: [
+                  'Attendance',
+                  'Leave'
+              ],
+              datasets: [
+                {
+                  data: [{{ attendance_count }},{{ leave_count }}],
+                  backgroundColor : ['#f56954', '#00a65a'],
+                }
+              ]
+            }
+            var pieChartCanvas = $('#pieChart').get(0).getContext('2d')
+            var pieOptions     = {
+              maintainAspectRatio : false,
+              responsive : true,
+            }
+            //Create pie or douhnut chart
+            // You can switch between pie and douhnut using the method below.
+            var pieChart = new Chart(pieChartCanvas, {
+              type: 'pie',
+              data: pieData,
+              options: pieOptions
+            });
+
+
+                var attendance_list={{ attendance_list }};
+                var subject_list={{ subject_list|safe }};
+                var barChartData = {
+                  labels  : subject_list,
+                  datasets: [
+                    {
+                      label               : 'Attend Subject Chart',
+                      backgroundColor     : 'rgba(60,141,188,0.9)',
+                      borderColor         : 'rgba(60,141,188,0.8)',
+                      pointRadius          : false,
+                      pointColor          : '#3b8bba',
+                      pointStrokeColor    : 'rgba(60,141,188,1)',
+                      pointHighlightFill  : '#fff',
+                      pointHighlightStroke: 'rgba(60,141,188,1)',
+                      data                : attendance_list
+                    }
+                  ]
+                }
+                var barChartCanvas = $('#barChart').get(0).getContext('2d')
+                var temp0 = barChartData.datasets[0]
+                barChartData.datasets[0] = temp0
+
+                var barChartOptions = {
+                  responsive              : true,
+                  maintainAspectRatio     : false,
+                  datasetFill             : false
+                }
+
+                var barChart = new Chart(barChartCanvas, {
+                  type: 'bar',
+                  data: barChartData,
+                  options: barChartOptions
+                })
+
+
+                var student_list={{ student_list|safe }};
+                var present_list={{ present_list }};
+                var absent_list={{ absent_list }};
+                 var barChartData2 = {
+                  labels  : student_list,
+                  datasets: [
+                    {
+                      label               : 'Student Attendance Chart For Present',
+                      backgroundColor     : 'rgba(60,141,188,0.9)',
+                      borderColor         : 'rgba(60,141,188,0.8)',
+                      pointRadius          : false,
+                      pointColor          : '#3b8bba',
+                      pointStrokeColor    : 'rgba(60,141,188,1)',
+                      pointHighlightFill  : '#fff',
+                      pointHighlightStroke: 'rgba(60,141,188,1)',
+                      data                : present_list
+                    },
+                    {
+                      label               : 'Student Attendance Chart for Absent',
+                      backgroundColor     : 'rgba(200,141,188,0.9)',
+                      borderColor         : 'rgba(200,141,188,0.8)',
+                      pointRadius          : false,
+                      pointColor          : '#3b8bba',
+                      pointStrokeColor    : 'rgba(60,141,188,1)',
+                      pointHighlightFill  : '#fff',
+                      pointHighlightStroke: 'rgba(60,141,188,1)',
+                      data                : absent_list
+                    }
+                  ]
+                }
+                var barChartCanvas2 = $('#barChart2').get(0).getContext('2d')
+                var temp2 = barChartData2.datasets[0]
+                barChartData2.datasets[0] = temp2
+
+                var barChartOptions2 = {
+                  responsive              : true,
+                  maintainAspectRatio     : false,
+                  datasetFill             : false
+                }
+
+                var barChart2 = new Chart(barChartCanvas2, {
+                  type: 'bar',
+                  data: barChartData2,
+                  options: barChartOptions2
+                })
+
+    });
+</script>
+<script src="https://www.gstatic.com/firebasejs/7.14.6/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.14.6/firebase-messaging.js"></script>
+<script>
+
+    var firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "FIREBASE_AUTH_URL",
+        databaseURL: "FIREBASE_DATABASE_URL",
+        projectId: "FIREBASE_PROJECT_ID",
+        storageBucket: "FIREBASE_STORAGE_BUCKET_URL",
+        messagingSenderId: "FIREBASE_SENDER_ID",
+        appId: "FIREBASE_APP_ID",
+        measurementId: "FIREBASE_MEASUREMENT_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const messaging=firebase.messaging();
+
+    function IntitalizeFireBaseMessaging() {
+        messaging
+            .requestPermission()
+            .then(function () {
+                console.log("Notification Permission");
+                return messaging.getToken();
+            })
+            .then(function (token) {
+                console.log("Token : "+token);
+                sendToServer(token);
+            })
+            .catch(function (reason) {
+                console.log(reason);
+            });
+    }
+
+    messaging.onMessage(function (payload) {
+        console.log(payload);
+        const notificationOption={
+            body:payload.notification.body,
+            icon:payload.notification.icon
+        };
+
+        if(Notification.permission==="granted"){
+            var notification=new Notification(payload.notification.title,notificationOption);
+
+            notification.onclick=function (ev) {
+                ev.preventDefault();
+                window.open(payload.notification.click_action,'_blank');
+                notification.close();
+            }
+        }
+
+    });
+    messaging.onTokenRefresh(function () {
+        messaging.getToken()
+            .then(function (newtoken) {
+                console.log("New Token : "+ newtoken);
+                sendToServer(newtoken);
+            })
+            .catch(function (reason) {
+                console.log(reason);
+            })
+    });
+
+    function sendToServer(token){
+         $.ajax({
+                url:'{% url 'staff_fcmtoken_save' %}',
+                type:'POST',
+                data:{token:token},
+            })
+            .done(function(response){
+                if(response=="True"){
+                    console.log("Token Save");
+                }
+                else{
+                    console.log("Error in Token Save");
+                }
+            });
+    }
+    IntitalizeFireBaseMessaging();
+</script>
+<script>
+  function printPage() {
+    window.print();
+  }
+</script>
+{% endblock custom_js %}

@@ -1,0 +1,326 @@
+{% extends 'hod_template/base_template.html' %}
+
+{% block main_content %}
+    <!-- Main content -->
+    <div class="home-tab">
+      <div class="d-sm-flex align-items-right justify-content-between border-bottom">
+       
+        <div>
+          <div class="btn-wrapper">
+            <a href="#" class="btn btn-primary text-white me-0" onclick="printPage()"><i class="icon-printer"></i> Print</a>
+            
+          </div>
+        </div>
+      </div>
+      <div class="tab-content tab-content-basic">
+        <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview">
+          <div class="row">
+            <div class="col-sm-12">
+              <div class="statistics-details d-flex align-items-center justify-content-between">
+                <div>
+                  <p class="statistics-title">Total Students</p>
+                  <h3 class="rate-percentage">{{ student_count }}</h3>
+                  <p class="text-danger d-flex"><i class="mdi mdi-menu-down"></i><a href="{% url 'manage_student' %}"><span>More info</span></a></p>
+                </div>
+                <div>
+                  <p class="statistics-title">Total Lecturers</p>
+                  <h3 class="rate-percentage">{{ staff_count }}</h3>
+                  <p class="text-success d-flex"><i class="mdi mdi-menu-up"></i><a href="{% url 'manage_staff' %}"><span>More info</span></a></p>
+                </div>
+                <div>
+                  <p class="statistics-title">Total Departments</p>
+                  <h3 class="rate-percentage">{{ course_count }}</h3>
+                  <p class="text-danger d-flex"><i class="mdi mdi-menu-down"></i><a href="{% url 'manage_course' %}"><span>More info</span></a></p>
+                </div>
+                <div class="d-none d-md-block">
+                  <p class="statistics-title">Total Courses</p>
+                  <h3 class="rate-percentage">{{ subject_count }}</h3>
+                  <p class="text-success d-flex"><i class="mdi mdi-menu-down"></i><a href="{% url 'manage_subject' %}"><span>More info</span></a></p>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+          <div class ="row">
+          <div class="col-lg-6 grid-margin grid-margin-lg-0 stretch-card">
+            <div class="card">
+              <div class="card-body" style="background-color: rgba(206, 206, 238, 0.3);">
+                <h4 class="card-title">Student and Lecturer Chart</h4>
+                <div class="doughnutjs-wrapper d-flex justify-content-center">
+                  <canvas id="pieChart" style="height: 250px !important;"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 grid-margin grid-margin-lg-0 stretch-card">
+            <div class="card">
+              <div class="card-body" style="background-color: rgba(206, 206, 238, 0.3);">
+                <h4 class="card-title">Total Courses in Each Department</h4>
+                <div class="doughnutjs-wrapper d-flex justify-content-center">
+                  <canvas id="donutChart" style="height: 250px !important;"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-6 grid-margin grid-margin-lg-0 stretch-card">
+            <div class="card">
+              <div class="card-body" style="background-color: rgba(206, 206, 238, 0.3);">
+                <h4 class="card-title">Total Student in Each Department</h4>
+                <div class="doughnutjs-wrapper d-flex justify-content-center">
+                  <canvas id="pieChart3" style="height: 250px !important;"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 grid-margin grid-margin-lg-0 stretch-card">
+            <div class="card">
+              <div class="card-body" style="background-color: rgba(206, 206, 238, 0.3);">
+                <h4 class="card-title">Total Student in Each Course</h4>
+                <div class="doughnutjs-wrapper d-flex justify-content-center">
+                  <canvas id="pieChart4" style="height: 250px !important;"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-6 grid-margin grid-margin-lg-0 stretch-card">
+            <div class="card">
+              <div class="card-body" style="background-color: rgba(206, 206, 238, 0.3);">
+                <h4 class="card-title">Lecturer Leave vs Attendance</h4>
+                <canvas id="barChart1" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 grid-margin grid-margin-lg-0 stretch-card">
+            <div class="card">
+              <div class="card-body" style="background-color: rgba(206, 206, 238, 0.3);">
+                <h4 class="card-title">Student Leaves vs Attendance</h4>
+                <canvas id="barChart2" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      
+
+        </div>
+      </div>
+    </div>
+    <!-- /.content -->
+{% endblock main_content %}
+{% block custom_js %}
+<script>
+    $(document).ready(function(){
+
+            var pieData        = {
+                  labels: [
+                      'Students',
+                      'Lecturers'
+                  ],
+                  datasets: [
+                    {
+                      data: [{{ student_count }},{{ staff_count }}],
+                      backgroundColor : ["#170186", "#1aa7dc"],
+                    }
+                  ]
+             };
+
+            var pieChartCanvas = $('#pieChart').get(0).getContext('2d')
+            var pieOptions     = {
+              maintainAspectRatio : false,
+              responsive : true,
+            }
+            //Create pie or douhnut chart
+            // You can switch between pie and douhnut using the method below.
+            var pieChart = new Chart(pieChartCanvas, {
+              type: 'pie',
+              data: pieData,
+              options: pieOptions
+            });
+
+            //Second Chart for Total Subject in Each Course
+                var subject_count_list={{ subject_count_list }};
+                var course_name_list={{ course_name_list|safe }};
+                var donutChartCanvas = $('#donutChart').get(0).getContext('2d')
+                var donutData        = {
+                  labels:course_name_list,
+                  datasets: [
+                    {
+                      data: subject_count_list,
+                      backgroundColor : ['#170186', '#1aa7dc', '#f39c12', '#00c0ef', '#3c8dbc', '#d2d6de'],
+                    }
+                  ]
+                }
+                var donutOptions     = {
+                  maintainAspectRatio : false,
+                  responsive : true,
+                }
+                //Create pie or douhnut chart
+                // You can switch between pie and douhnut using the method below.
+                var donutChart = new Chart(donutChartCanvas, {
+                  type: 'doughnut',
+                  data: donutData,
+                  options: donutOptions
+                });
+
+
+                //show total student in each course
+                var student_count_list_in_course={{ student_count_list_in_course }};
+
+                  var pieData2 = {
+                          labels:course_name_list,
+                          datasets: [
+                            {
+                              data: student_count_list_in_course,
+                              backgroundColor : ['#170186', '#1aa7dc','#aa00ff', '#ff3d00'],
+                            }
+                          ]
+                     };
+
+                    var pieChartCanvas2 = $('#pieChart3').get(0).getContext('2d')
+                    var pieOptions2     = {
+                      maintainAspectRatio : false,
+                      responsive : true,
+                    }
+                    var pieChart = new Chart(pieChartCanvas2, {
+                      type: 'pie',
+                      data: pieData2,
+                      options: pieOptions2
+                    });
+
+                //show total student in each Subject
+                var student_count_list_in_subject={{ student_count_list_in_subject }};
+                var subject_list={{ subject_list|safe }};
+
+                  var pieData3  = {
+                          labels:subject_list,
+                          datasets: [
+                            {
+                              data: student_count_list_in_subject,
+                              backgroundColor : ['#f56954', '#170186', '#1aa7dc', '#ff3d00','#bf360c','#ffff00','#00e676','#40c4ff','#f56954', '#00a65a','#aa00ff', '#ff3d00','#bf360c','#ffff00','#00e676','#40c4ff'],
+                            }
+                          ]
+                     };
+
+                    var pieChartCanvas3 = $('#pieChart4').get(0).getContext('2d')
+                    var pieOption3     = {
+                      maintainAspectRatio : false,
+                      responsive : true,
+                    }
+                    var pieChart = new Chart(pieChartCanvas3, {
+                      type: 'pie',
+                      data: pieData3,
+                      options: pieOption3
+                    });
+
+                        ///Staff Leave vs Attendance Bar Chart
+                        var attendance_present_list_staff={{ attendance_present_list_staff }};
+                        var attendance_absent_list_staff={{ attendance_absent_list_staff }};
+                        var staff_name_list={{ staff_name_list|safe }};
+                        var barChartData = {
+                          labels  : staff_name_list,
+                          datasets: [
+                            {
+                              label               : 'Leaves',
+                              backgroundColor     : 'rgba(60,141,188,0.9)',
+                              borderColor         : 'rgba(60,141,188,0.8)',
+                              pointRadius          : false,
+                              pointColor          : '#3b8bba',
+                              pointStrokeColor    : 'rgba(60,141,188,1)',
+                              pointHighlightFill  : '#fff',
+                              pointHighlightStroke: 'rgba(60,141,188,1)',
+                              data                : attendance_absent_list_staff
+                            },
+                            {
+                              label               : 'Attendance',
+                              backgroundColor     : 'rgba(210, 214, 222, 1)',
+                              borderColor         : 'rgba(210, 214, 222, 1)',
+                              pointRadius         : false,
+                              pointColor          : 'rgba(210, 214, 222, 1)',
+                              pointStrokeColor    : '#c1c7d1',
+                              pointHighlightFill  : '#fff',
+                              pointHighlightStroke: 'rgba(220,220,220,1)',
+                              data                : attendance_present_list_staff
+                            },
+                          ]
+                        }
+                        var barChartCanvas = $('#barChart1').get(0).getContext('2d')
+                        var temp0 = barChartData.datasets[0]
+                        var temp1 = barChartData.datasets[1]
+                        barChartData.datasets[0] = temp1
+                        barChartData.datasets[1] = temp0
+
+                        var barChartOptions = {
+                          responsive              : true,
+                          maintainAspectRatio     : false,
+                          datasetFill             : false
+                        }
+
+                        var barChart = new Chart(barChartCanvas, {
+                          type: 'bar',
+                          data: barChartData,
+                          options: barChartOptions
+                        })
+
+                        //Student Leaves vs Attendance
+                        var attendance_present_list_student={{ attendance_present_list_student }};
+                        var attendance_absent_list_student={{ attendance_absent_list_student }};
+                        var student_name_list={{ student_name_list|safe }};
+                        var barChartData2 = {
+                          labels  : student_name_list,
+                          datasets: [
+                            {
+                              label               : 'Leaves',
+                              backgroundColor     : 'rgba(60,141,188,0.9)',
+                              borderColor         : 'rgba(60,141,188,0.8)',
+                              pointRadius          : false,
+                              pointColor          : '#3b8bba',
+                              pointStrokeColor    : 'rgba(60,141,188,1)',
+                              pointHighlightFill  : '#fff',
+                              pointHighlightStroke: 'rgba(60,141,188,1)',
+                              data                : attendance_absent_list_student
+                            },
+                            {
+                              label               : 'Attendance',
+                              backgroundColor     : 'rgba(210, 214, 222, 1)',
+                              borderColor         : 'rgba(210, 214, 222, 1)',
+                              pointRadius         : false,
+                              pointColor          : 'rgba(210, 214, 222, 1)',
+                              pointStrokeColor    : '#c1c7d1',
+                              pointHighlightFill  : '#fff',
+                              pointHighlightStroke: 'rgba(220,220,220,1)',
+                              data                : attendance_present_list_student
+                            },
+                          ]
+                        }
+                        var barChartCanvas2 = $('#barChart2').get(0).getContext('2d')
+                        var temp02 = barChartData2.datasets[0]
+                        var temp12 = barChartData2.datasets[1]
+                        barChartData2.datasets[0] = temp12
+                        barChartData2.datasets[1] = temp02
+
+                        var barChartOptions2 = {
+                          responsive              : true,
+                          maintainAspectRatio     : false,
+                          datasetFill             : false
+                        }
+
+                        var barChart2 = new Chart(barChartCanvas2, {
+                          type: 'bar',
+                          data: barChartData2,
+                          options: barChartOptions2
+                        })
+
+
+
+    });
+</script>
+<script>
+  function printPage() {
+      window.print(); // Triggers the print dialog for the current page
+  }
+</script>
+
+{% endblock custom_js %}
